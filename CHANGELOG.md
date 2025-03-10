@@ -21,3 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Implemented TypeScript for better type safety
+
+## 0.1.2 - 2025-03-10
+
+### Added
+- Existing credential addition option
+- Copy to clipboard functionality for username
+- IV generation for encryption
+- Handlers to generate IV encryption to store credentials in database
+- Handlers to generate IV decryption to retrieve credentials from database
+
+
+### Changed
+- localStorage with SQLite for storage
+
+### Fixed
+- Search functionality for saved credentials

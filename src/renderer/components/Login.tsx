@@ -8,22 +8,35 @@ interface LoginProps {
 }
 
 const Login = ({ setIsAuthenticated }: LoginProps) => {
-  const { darkMode } = useApp();
+  const { darkMode, setCurrentUserId } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
     
-    if (username === 'e' && password === 'e') { //* Placeholder credentials for now
-      localStorage.setItem('isAuthenticated', 'true');
-      setIsAuthenticated(true);
-      navigate('/dashboard', { replace: true });
-    } else {
-      setError('Invalid credentials');
-      setTimeout(() => setError(''), 3000); // Clear error after 3 seconds
+    try {
+      const response = await window.electron.auth.login(username, password);
+      
+      if (response.success) {
+        setCurrentUserId(response.user.id);
+        setIsAuthenticated(true);
+        navigate('/dashboard', { replace: true });
+      } else {
+        setError(response.message || 'Invalid credentials');
+        setTimeout(() => setError(''), 3000); // Clear error after 3 seconds
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An error occurred during login');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -53,12 +66,9 @@ const Login = ({ setIsAuthenticated }: LoginProps) => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                           bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                           transition-colors duration-200"
-                  placeholder="Enter your username"
                   required
+                  className="pl-10 h-8 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Enter your username"
                 />
               </div>
             </div>
@@ -75,29 +85,26 @@ const Login = ({ setIsAuthenticated }: LoginProps) => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                           bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                           transition-colors duration-200"
-                  placeholder="Enter your password"
                   required
+                  className="pl-10 h-8 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Enter your password"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 p-3 rounded-lg text-sm text-center">
-                {error}
-              </div>
+              <div className="text-red-500 text-sm font-medium">{error}</div>
             )}
 
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg
-                       hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500
-                       transform transition-all duration-200 hover:scale-[1.02]"
+              disabled={isLoading}
+              // className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg
+                       hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-[1.02]
+                       font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </form>
         </div>

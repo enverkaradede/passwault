@@ -14,6 +14,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { setupIpcHandlers } from '../electron/ipc/handlers';
 
 class AppUpdater {
   constructor() {
@@ -78,6 +79,8 @@ const createWindow = async () => {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   });
 
@@ -127,6 +130,9 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+    // Set up IPC handlers for database operations
+    setupIpcHandlers();
+    
     createWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
